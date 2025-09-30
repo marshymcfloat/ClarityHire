@@ -9,7 +9,9 @@ const ProtectedRoutesLayout = ({ children }: { children: React.ReactNode }) => {
         <AppSidebar />
         <main className="overflow-y-hidden w-full">
           <SidebarTrigger className="bg-slate-200 m-2" />
-          {children}
+          <section className=" rounded-2xl bg-white w-[95%] ml-auto h-full p-4 space-y-6">
+            {children}
+          </section>
         </main>
       </SidebarProvider>
     </>

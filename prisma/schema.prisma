@@ -17,16 +17,20 @@ model User {
   id    String @id @default(cuid())
   email String @unique
 
-  username String? @unique 
+  username String? @unique
   name     String?
-  image    String? 
+  image    String?
 
-  password String? 
+  password String?
 
-  role  UserRoleEnum @default(APPLICANT)
+  role UserRoleEnum @default(APPLICANT)
 
-  company Company? @relation(fields: [companyId], references: [id])
+  // A recruiter belongs to one company
+  company   Company? @relation(fields: [companyId], references: [id])
   companyId String?
+
+  // An applicant has many applications
+  applications Application[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -73,31 +77,50 @@ updatedAt DateTime @updatedAt
 }
 
 model Job {
+  id String @id @default(cuid())
 
-id String @id  @default(cuid())
+  title       String
+  description String
 
-title String 
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId String
 
-description String
+  applications Application[]
 
-company Company @relation(fields: [companyId], references: [id])
-companyId String
-
-createdAt DateTime @default(now())
-updatedAt DateTime @updatedAt
-
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model JobInvitation {
-id String @id @default(cuid())
+model Application {
+  id String @id @default(cuid())
 
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
 
+  job    Job    @relation(fields: [jobId], references: [id])
+  jobId  String
 
+  status  ApplicationStatus @default(SUBMITTED)
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, jobId])
 }
+
 
 
 enum UserRoleEnum {
   APPLICANT
   RECRUITER
+}
+
+enum ApplicationStatus {
+  SUBMITTED     // Applicant has submitted the application
+  IN_REVIEW     // Recruiter is actively reviewing the application
+  INTERVIEWING  // Candidate is in the interview process (phone screen, technical, on-site, etc.)
+  OFFERED       // An official job offer has been extended
+  REJECTED      // The company has decided not to move forward with the candidate
+  WITHDRAWN     // The candidate has withdrawn their application
+  HIRED         // The candidate has accepted the offer and is hired
 }

@@ -33,6 +33,7 @@ export default function RootLayout({
         <NextSessionProvider>
           <TanstackProvider>
             {children}
+
             <Toaster />
           </TanstackProvider>
         </NextSessionProvider>

@@ -61,7 +61,7 @@ const LoginForm = ({ onRegister }: { onRegister: () => void }) => {
   const isDisabled = isSubmitting;
 
   return (
-    <Card className="lg:w-[420px] md:w-[70%] w-[90%] ">
+    <Card className="lg:w-[420px] md:w-[70%] w-[90%] bg-gray-200">
       <CardHeader>
         <CardTitle className="text-center text-xl uppercase">Login</CardTitle>
       </CardHeader>
@@ -78,6 +78,7 @@ const LoginForm = ({ onRegister }: { onRegister: () => void }) => {
                     <FormLabel className="capitalize">{input}</FormLabel>
                     <FormControl>
                       <Input
+                        className="border-slate-700 "
                         {...field}
                         type={input === "password" ? "password" : "text"}
                       />

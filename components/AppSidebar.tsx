@@ -36,7 +36,7 @@ export function AppSidebar() {
   const items = [
     {
       title: "Home",
-      url: `/${session.data?.user.id}`,
+      url: `/${session.data?.user.id}/dashboard`,
       icon: Home,
     },
     {
@@ -89,7 +89,6 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         {session.status === "loading" && (
-          // Show a skeleton for the entire user info block
           <div className="flex items-center gap-4">
             <Skeleton className="h-10 w-10 rounded-full" />
             <Skeleton className="h-4 w-[100px]" />
@@ -113,7 +112,9 @@ export function AppSidebar() {
               </div>
             )}
             <h1 className="truncate text-sm font-medium">
-              {session.data.user.username || session.data.user.email}
+              {session.data.user.name ||
+                session.data.user.username ||
+                session.data.user.email}
             </h1>
           </div>
         )}
