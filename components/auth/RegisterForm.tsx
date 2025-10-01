@@ -79,7 +79,7 @@ const RegisterForm = ({ onBack }: { onBack: () => void }) => {
   const onDisable = isPending;
 
   return (
-    <Card className="lg:w-[420px] md:w-[70%] w-[90%] relative">
+    <Card className="lg:w-[420px] md:w-[70%] w-[90%] relative bg-gray-200">
       <ChevronLeft
         onClick={onBack}
         className="absolute left-4 top-4 hover:bg-muted cursor-pointer duration-150 transition-colors rounded-full "

@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  Calendar,
-  Home,
-  Inbox,
-  LoaderCircle,
-  LogOut,
-  Search,
-  Settings,
-} from "lucide-react";
+import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 
 import {
@@ -22,17 +14,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Button } from "./ui/button";
-import { Suspense, useEffect, useState } from "react";
-import Image from "next/image";
-import { Skeleton } from "./ui/skeleton";
+import { useState } from "react";
+import UserInfoButton from "./dashboard/UserInfoButton";
 
 export function AppSidebar() {
   const session = useSession();
 
   const [logOutClicked, setLogOutClicked] = useState(false);
 
-  session;
   const items = [
     {
       title: "Home",
@@ -88,45 +77,11 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        {session.status === "loading" && (
-          <div className="flex items-center gap-4">
-            <Skeleton className="h-10 w-10 rounded-full" />
-            <Skeleton className="h-4 w-[100px]" />
-          </div>
-        )}
-
-        {session.status === "authenticated" && (
-          <div className="flex items-center gap-4">
-            {session.data.user.image ? (
-              <Image
-                width={40}
-                height={40}
-                src={session.data.user.image}
-                className="rounded-full"
-                alt="user icon"
-              />
-            ) : (
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-300  font-bold">
-                {session.data.user.username?.charAt(0).toUpperCase() ||
-                  session.data.user.email?.charAt(0).toUpperCase()}
-              </div>
-            )}
-            <h1 className="truncate text-sm font-medium">
-              {session.data.user.name ||
-                session.data.user.username ||
-                session.data.user.email}
-            </h1>
-          </div>
-        )}
-
-        <Button
-          className="w-full"
-          onClick={handleLogout}
-          disabled={logOutClicked || session.status !== "authenticated"}
-        >
-          {logOutClicked && <LoaderCircle className="mr-2 animate-spin" />}
-          <LogOut className="mr-2" /> Logout
-        </Button>
+        <UserInfoButton
+          handleLogout={handleLogout}
+          logOutClicked={logOutClicked}
+          session={session}
+        />
       </SidebarFooter>
     </Sidebar>
   );

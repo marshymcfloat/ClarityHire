@@ -78,7 +78,7 @@ const LoginForm = ({ onRegister }: { onRegister: () => void }) => {
                     <FormLabel className="capitalize">{input}</FormLabel>
                     <FormControl>
                       <Input
-                        className="border-slate-700 "
+                        className=" "
                         {...field}
                         type={input === "password" ? "password" : "text"}
                       />

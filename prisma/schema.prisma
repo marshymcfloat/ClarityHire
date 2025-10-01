@@ -23,7 +23,7 @@ model User {
 
   password String?
 
-  role UserRoleEnum @default(APPLICANT)
+  role UserRoleEnum[] @default([APPLICANT])
 
   // A recruiter belongs to one company
   company   Company? @relation(fields: [companyId], references: [id])
@@ -64,6 +64,11 @@ model Company {
 id String @id @default(cuid())
 
 name String 
+
+image String?
+coverImage String?
+location String
+description String
 
 recruiters User[]
 jobs Job[]

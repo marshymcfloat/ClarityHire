@@ -3,6 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialProvider from "next-auth/providers/credentials";
 import prisma from "@/prisma/prisma";
 import { compare } from "bcryptjs";
+import { UserRoleEnum } from "@prisma/client/edge";
 export const authOptions: AuthOptions = {
   providers: [
     GoogleProvider({
@@ -53,6 +54,7 @@ export const authOptions: AuthOptions = {
           email: foundUser.email,
           name: foundUser.name,
           username: foundUser.username,
+          role: foundUser.role,
         };
       },
     }),
@@ -102,7 +104,7 @@ export const authOptions: AuthOptions = {
                 email: user.email!,
                 name: user.name,
                 image: user.image,
-                // Create the linked account at the same time
+
                 accounts: {
                   create: {
                     type: account.type,
@@ -129,19 +131,29 @@ export const authOptions: AuthOptions = {
       return true; // Allow sign-in for other providers (like credentials)
     },
 
-    jwt: async ({ token, user, account }) => {
+    jwt: async ({ token, user }) => {
       if (user) {
-        token.id = user.id;
-        token.username = user.username; // Pass the username to the token
-        token.picture = user.image;
+        const dbUser = await prisma.user.findUnique({
+          where: { email: user.email! },
+        });
+
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.username = dbUser.username;
+          token.picture = dbUser.image;
+          token.role = dbUser.role; // This is the crucial part!
+        }
       }
+
       return token;
     },
     session: async ({ token, session }) => {
+      // The session callback now receives the enriched token.
       if (token && session.user) {
-        session.user.id = token.id;
-        session.user.username = token.username;
-        session.user.image = token.picture;
+        session.user.id = token.id as string;
+        session.user.username = token.username as string | null;
+        session.user.image = token.picture as string | null;
+        session.user.role = token.role as UserRoleEnum[]; // Pass the role to the session
       }
       return session;
     },

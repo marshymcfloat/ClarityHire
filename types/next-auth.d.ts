@@ -10,6 +10,7 @@ declare module "next-auth/jwt" {
   interface JWT extends DefaultJWT {
     id: string;
     username: string | null; // <-- THE FIX: Add username here, make it nullable
+    role: UserRoleEnum;
   }
 }
 
@@ -21,6 +22,7 @@ declare module "next-auth" {
     // Note: The User object is what's returned from the `authorize` callback.
     // It doesn't need every property from the session.
     username: string | null; // <-- THE FIX: Match Prisma schema
+    role: UserRoleEnum;
   }
 
   /**
@@ -30,6 +32,7 @@ declare module "next-auth" {
     user: {
       id: string;
       username: string | null; // <-- THE FIX: Match Prisma schema
+      role: UserRoleEnum;
     } & DefaultSession["user"]; // Keep the default properties like name, email, image
   }
 }
