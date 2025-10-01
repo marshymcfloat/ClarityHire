@@ -5,15 +5,21 @@ import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
 
 type ContentType = "LOGIN" | "REGISTER";
-const AuthClient = () => {
+const AuthClient = ({ className }: { className?: string }) => {
   const [content, setContent] = useState<ContentType>("LOGIN");
 
   return (
     <>
       {content === "LOGIN" ? (
-        <LoginForm onRegister={() => setContent("REGISTER")} />
+        <LoginForm
+          className={className}
+          onRegister={() => setContent("REGISTER")}
+        />
       ) : (
-        <RegisterForm onBack={() => setContent("LOGIN")} />
+        <RegisterForm
+          className={className}
+          onBack={() => setContent("LOGIN")}
+        />
       )}
     </>
   );

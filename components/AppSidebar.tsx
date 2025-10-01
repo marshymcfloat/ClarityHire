@@ -1,7 +1,14 @@
 "use client";
 
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
+import {
+  Briefcase,
+  Calendar,
+  Home,
+  Inbox,
+  Search,
+  Settings,
+} from "lucide-react";
+import { useSession } from "next-auth/react";
 
 import {
   Sidebar,
@@ -10,54 +17,43 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { useState } from "react";
 import UserInfoButton from "./dashboard/UserInfoButton";
+import { Company } from "@prisma/client/edge";
 
-export function AppSidebar() {
+export function AppSidebar({ company }: { company: Company }) {
   const session = useSession();
-
-  const [logOutClicked, setLogOutClicked] = useState(false);
 
   const items = [
     {
-      title: "Home",
-      url: `/${session.data?.user.id}/dashboard`,
+      title: "Available Jobs",
+      url: ``,
+      icon: Briefcase,
+    },
+    {
+      title: "Job Applications",
+      url: `/${session.data?.user.id}/job-applications`,
       icon: Home,
     },
+
     {
       title: "Inbox",
-      url: "#",
+      url: "",
       icon: Inbox,
     },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
-    },
   ];
-
-  const handleLogout = async () => {
-    setLogOutClicked(true);
-    await signOut();
-  };
 
   return (
     <Sidebar>
       <SidebarContent>
+        <SidebarHeader className="capitalize font-medium">
+          {company.name}
+        </SidebarHeader>
+
         <SidebarGroup>
           <SidebarGroupLabel>Application</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -77,11 +73,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <UserInfoButton
-          handleLogout={handleLogout}
-          logOutClicked={logOutClicked}
-          session={session}
-        />
+        <UserInfoButton />
       </SidebarFooter>
     </Sidebar>
   );

@@ -23,8 +23,15 @@ import { registerUserAction } from "@/lib/actions/authActions";
 import { toast } from "sonner";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
-const RegisterForm = ({ onBack }: { onBack: () => void }) => {
+const RegisterForm = ({
+  onBack,
+  className,
+}: {
+  className?: string;
+  onBack: () => void;
+}) => {
   const router = useRouter();
 
   const form = useForm<RegisterFormValue>({
@@ -79,7 +86,12 @@ const RegisterForm = ({ onBack }: { onBack: () => void }) => {
   const onDisable = isPending;
 
   return (
-    <Card className="lg:w-[420px] md:w-[70%] w-[90%] relative bg-gray-200">
+    <Card
+      className={cn(
+        "lg:w-[420px] md:w-[70%] w-[90%] relative bg-gray-200",
+        className
+      )}
+    >
       <ChevronLeft
         onClick={onBack}
         className="absolute left-4 top-4 hover:bg-muted cursor-pointer duration-150 transition-colors rounded-full "

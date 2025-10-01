@@ -23,8 +23,15 @@ import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { LoaderCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const LoginForm = ({ onRegister }: { onRegister: () => void }) => {
+const LoginForm = ({
+  onRegister,
+  className,
+}: {
+  onRegister: () => void;
+  className?: string;
+}) => {
   const router = useRouter();
 
   const form = useForm<LoginFormValues>({
@@ -61,7 +68,9 @@ const LoginForm = ({ onRegister }: { onRegister: () => void }) => {
   const isDisabled = isSubmitting;
 
   return (
-    <Card className="lg:w-[420px] md:w-[70%] w-[90%] bg-gray-200">
+    <Card
+      className={cn("lg:w-[420px] md:w-[70%] w-[90%] bg-gray-200", className)}
+    >
       <CardHeader>
         <CardTitle className="text-center text-xl uppercase">Login</CardTitle>
       </CardHeader>

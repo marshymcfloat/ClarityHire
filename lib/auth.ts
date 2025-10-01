@@ -61,8 +61,6 @@ export const authOptions: AuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      // This callback is triggered when a user successfully signs in with ANY provider.
-      // We only want to run custom logic for OAuth providers.
       if (account?.provider === "google") {
         try {
           // Check if a user with this email already exists

@@ -13,6 +13,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ... User and Account models are fine ...
+
 model User {
   id    String @id @default(cuid())
   email String @unique
@@ -61,24 +63,22 @@ model Account {
 
 
 model Company {
-id String @id @default(cuid())
+  id String @id @default(cuid())
 
-name String 
+  name String 
+  // Make slug unique to prevent conflicts
+  slug String @unique
 
-image String?
-coverImage String?
-location String
-description String
+  image String?
+  coverImage String?
+  location String
+  description String
 
-recruiters User[]
-jobs Job[]
+  recruiters User[]
+  jobs Job[]
 
-createdAt DateTime @default(now())
-updatedAt DateTime @updatedAt
-
-
-
-
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Job {
@@ -86,6 +86,14 @@ model Job {
 
   title       String
   description String
+
+  location         String          
+  jobType          JobType         
+  experienceLevel  ExperienceLevel // e.g., ENTRY_LEVEL, MID_LEVEL
+  salaryMin        Int?            // Optional minimum salary
+  salaryMax        Int?            // Optional maximum salary
+  department       String?         // Optional, e.g., "Engineering"
+  isActive         Boolean         @default(true) // To easily hide/show jobs
 
   company   Company @relation(fields: [companyId], references: [id])
   companyId String
@@ -95,6 +103,7 @@ model Job {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
 
 model Application {
   id String @id @default(cuid())
@@ -113,7 +122,22 @@ model Application {
   @@unique([userId, jobId])
 }
 
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+}
 
+enum ExperienceLevel {
+  INTERNSHIP
+  ENTRY_LEVEL
+  ASSOCIATE
+  MID_LEVEL
+  SENIOR
+  STAFF
+  PRINCIPAL
+}
 
 enum UserRoleEnum {
   APPLICANT
@@ -121,11 +145,11 @@ enum UserRoleEnum {
 }
 
 enum ApplicationStatus {
-  SUBMITTED     // Applicant has submitted the application
-  IN_REVIEW     // Recruiter is actively reviewing the application
-  INTERVIEWING  // Candidate is in the interview process (phone screen, technical, on-site, etc.)
-  OFFERED       // An official job offer has been extended
-  REJECTED      // The company has decided not to move forward with the candidate
-  WITHDRAWN     // The candidate has withdrawn their application
-  HIRED         // The candidate has accepted the offer and is hired
+  SUBMITTED
+  IN_REVIEW
+  INTERVIEWING
+  OFFERED
+  REJECTED
+  WITHDRAWN
+  HIRED
 }

@@ -8,8 +8,11 @@ export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   const authPaths = ["/login", "/register"];
+  const publicPaths = ["/"]; // static public routes
 
-  const publicPaths = ["/"];
+  const publicPatterns = [
+    /^\/[^/]+\/available-jobs$/, // matches /:company-name/available-jobs
+  ];
 
   if (token) {
     if (authPaths.includes(pathname)) {
@@ -18,8 +21,11 @@ export default async function middleware(req: NextRequest) {
   }
 
   if (!token) {
-    const isProtectedRoute =
-      !authPaths.includes(pathname) && !publicPaths.includes(pathname);
+    const isPublic =
+      publicPaths.includes(pathname) ||
+      publicPatterns.some((pattern) => pattern.test(pathname));
+
+    const isProtectedRoute = !authPaths.includes(pathname) && !isPublic;
 
     if (isProtectedRoute) {
       const loginUrl = new URL("/login", req.url);
