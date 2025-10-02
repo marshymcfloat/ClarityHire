@@ -146,7 +146,6 @@ export const authOptions: AuthOptions = {
       return token;
     },
     session: async ({ token, session }) => {
-      // The session callback now receives the enriched token.
       if (token && session.user) {
         session.user.id = token.id as string;
         session.user.username = token.username as string | null;

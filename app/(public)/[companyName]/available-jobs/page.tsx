@@ -8,20 +8,18 @@ const CompanyAvailableJobsPage = async ({
 }: {
   params: { companyName: string };
 }) => {
-  // Corrected destructuring
   const { companyName } = await params;
 
   const company = await prisma.company.findFirst({
     where: { slug: companyName },
     include: {
       jobs: {
-        where: { isActive: true }, // Only show active jobs!
-        orderBy: { createdAt: "desc" }, // Show newest jobs first
+        where: { isActive: true },
+        orderBy: { createdAt: "desc" },
       },
     },
   });
 
-  // If company doesn't exist, show a 404 page
   if (!company) {
     notFound();
   }

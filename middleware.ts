@@ -10,9 +10,7 @@ export default async function middleware(req: NextRequest) {
   const authPaths = ["/login", "/register"];
   const publicPaths = ["/"]; // static public routes
 
-  const publicPatterns = [
-    /^\/[^/]+\/available-jobs$/, // matches /:company-name/available-jobs
-  ];
+  const publicPatterns = [/^\/[^/]+\/available-jobs$/];
 
   if (token) {
     if (authPaths.includes(pathname)) {
