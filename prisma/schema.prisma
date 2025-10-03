@@ -74,6 +74,8 @@ model Company {
   location String
   description String
 
+  websiteUrl  String?
+
   recruiters User[]
   jobs Job[]
 
@@ -84,16 +86,24 @@ model Company {
 model Job {
   id String @id @default(cuid())
 
-  title       String
-  description String
+  title            String
+  description      String?
 
-  location         String          
-  jobType          JobType         
-  experienceLevel  ExperienceLevel // e.g., ENTRY_LEVEL, MID_LEVEL
-  salaryMin        Int?            // Optional minimum salary
-  salaryMax        Int?            // Optional maximum salary
-  department       String?         // Optional, e.g., "Engineering"
-  isActive         Boolean         @default(true) // To easily hide/show jobs
+  responsibilities String[] // Array of strings for bullet points
+  qualifications   String[] // Array of strings for bullet points
+  benefits         String[] // e.g., ["Dormitory accommodation", "Health Insurance"]
+
+  skills           String[]        // e.g., ["Java", "JavaScript", "MySQL", "PHP"]
+  workArrangement  WorkArrangement @default(ON_SITE) // ON_SITE, HYBRID, REMOTE
+  workSchedule     String?         // e.g., "Monday to Saturday, 9am-6pm"
+
+  location         String
+  jobType          JobType
+  experienceLevel  ExperienceLevel
+  salaryMin        Int?
+  salaryMax        Int?
+  department       String?
+  isActive         Boolean         @default(true)
 
   company   Company @relation(fields: [companyId], references: [id])
   companyId String
@@ -152,4 +162,10 @@ enum ApplicationStatus {
   REJECTED
   WITHDRAWN
   HIRED
+}
+
+enum WorkArrangement {
+  ON_SITE
+  HYBRID
+  REMOTE
 }

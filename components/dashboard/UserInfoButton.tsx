@@ -10,6 +10,7 @@ import { AnimatePresence, motion } from "framer-motion"; // Note: The original c
 import RegisterCompanyClient from "./RegisterCompanyClient";
 import { UserRoleEnum } from "@prisma/client/edge";
 import LoginDialog from "../auth/LoginDialog";
+import { useParams, useSearchParams } from "next/navigation";
 
 type SessionType = ReturnType<typeof useSession>;
 
@@ -19,10 +20,15 @@ const UserInfoButton = () => {
   const [showRegisterClient, setShowRegisterClient] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [logOutClicked, setLogOutClicked] = useState(false);
+  const { companyName } = useParams();
+
+  const middlewareShowLogin = useSearchParams().get("showLogin");
+
+  const shouldShowLogin = !!(showLogin || middlewareShowLogin);
 
   const handleLogout = async () => {
     setLogOutClicked(true);
-    await signOut({ callbackUrl: "/" });
+    await signOut({ callbackUrl: `/${companyName}/available-jobs` });
     setLogOutClicked(false);
   };
 
@@ -34,10 +40,9 @@ const UserInfoButton = () => {
     } else {
       setShowRegisterClient(true);
     }
-    setShowDetails(false); // Close dropdown after clicking
+    setShowDetails(false);
   }
 
-  // Loading State
   if (session.status === "loading") {
     return (
       <div className="flex items-center gap-4">
@@ -47,11 +52,10 @@ const UserInfoButton = () => {
     );
   }
 
-  // Unauthenticated State
   if (session.status === "unauthenticated") {
     return (
       <>
-        <LoginDialog open={showLogin} onOpenChange={setShowLogin} />
+        <LoginDialog open={shouldShowLogin} onOpenChange={setShowLogin} />
         <Button onClick={() => setShowLogin(true)}>
           <LogIn className="mr-2 h-4 w-4" />
           Login
@@ -60,7 +64,6 @@ const UserInfoButton = () => {
     );
   }
 
-  // Authenticated State
   if (session.status === "authenticated") {
     return (
       <>
@@ -69,7 +72,6 @@ const UserInfoButton = () => {
           className="relative flex cursor-pointer items-center gap-4"
           onClick={() => setShowDetails((prev) => !prev)}
         >
-          {/* User Avatar and Name */}
           {session.data.user.image ? (
             <Image
               width={40}
@@ -90,7 +92,6 @@ const UserInfoButton = () => {
               session.data.user.email}
           </h1>
 
-          {/* Dropdown Menu */}
           <AnimatePresence>
             {showDetails && (
               <motion.div

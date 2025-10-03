@@ -21,7 +21,7 @@ import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { LoaderCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,7 +33,9 @@ const LoginForm = ({
   className?: string;
 }) => {
   const router = useRouter();
+  const { companyName } = useParams();
 
+  const callbackUrl = `/${companyName}/available-jobs`;
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
@@ -53,7 +55,8 @@ const LoginForm = ({
     const response = await signIn("credentials", {
       username,
       password,
-      redirect: false,
+      redirect: true,
+      callbackUrl,
     });
 
     if (response?.ok) {
@@ -110,7 +113,7 @@ const LoginForm = ({
         </div>
         <Button
           className="w-full"
-          onClick={() => signIn("google")}
+          onClick={() => signIn("google", { redirect: true, callbackUrl })}
           disabled={isDisabled}
         >
           {isDisabled && <LoaderCircle className="animate-spin" />}

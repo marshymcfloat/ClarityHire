@@ -8,27 +8,44 @@ export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   const authPaths = ["/login", "/register"];
-  const publicPaths = ["/"]; // static public routes
+  const staticPublicPaths = ["/"];
+  const publicJobsPattern = /^\/([^/]+)\/available-jobs$/;
 
-  const publicPatterns = [/^\/[^/]+\/available-jobs$/];
+  if (!token) {
+    const isStaticPublic = staticPublicPaths.includes(pathname);
+    const isAuthPath = authPaths.includes(pathname);
+    const isPublicJobsPage = publicJobsPattern.test(pathname);
+
+    if (isStaticPublic || isAuthPath || isPublicJobsPage) {
+      return NextResponse.next();
+    }
+
+    const protectedPathPattern = /^\/([^/]+)\//;
+    const protectedPathMatch = pathname.match(protectedPathPattern);
+
+    if (protectedPathMatch) {
+      const companySlug = protectedPathMatch[1];
+      const redirectUrl = new URL(`/${companySlug}/available-jobs`, req.url);
+
+      redirectUrl.searchParams.set("showLogin", "true");
+
+      console.log(
+        `Unauthorized access to ${pathname}. Redirecting to ${redirectUrl.href}`
+      );
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    const loginUrl = new URL("/login", req.url);
+    loginUrl.searchParams.set("callbackUrl", pathname);
+
+    loginUrl.searchParams.set("showLogin", "true");
+
+    return NextResponse.redirect(loginUrl);
+  }
 
   if (token) {
     if (authPaths.includes(pathname)) {
       return NextResponse.redirect(new URL(`/${token.id}/dashboard`, req.url));
-    }
-  }
-
-  if (!token) {
-    const isPublic =
-      publicPaths.includes(pathname) ||
-      publicPatterns.some((pattern) => pattern.test(pathname));
-
-    const isProtectedRoute = !authPaths.includes(pathname) && !isPublic;
-
-    if (isProtectedRoute) {
-      const loginUrl = new URL("/login", req.url);
-      loginUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(loginUrl);
     }
   }
 

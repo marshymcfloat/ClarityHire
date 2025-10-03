@@ -11,17 +11,18 @@ import {
 import { Job } from "@prisma/client"; // Import the generated Job type
 import { Badge } from "../ui/badge";
 import { formatDistanceToNow } from "date-fns"; // For "posted 2 days ago"
+import Link from "next/link";
 
-// We'll pass the full company and job object to this component
 interface JobCardProps {
   job: Job;
   company: {
     name: string;
     image: string | null;
   };
+  companyName: string;
 }
 
-const JobCard = ({ job, company }: JobCardProps) => {
+const JobCard = ({ job, company, companyName }: JobCardProps) => {
   const formatSalary = (min?: number | null, max?: number | null) => {
     if (!min) return null;
     if (!max) return `₱${min.toLocaleString()}`;
@@ -41,7 +42,7 @@ const JobCard = ({ job, company }: JobCardProps) => {
         <div className="flex justify-between items-start">
           <div>
             <CardTitle className="text-xl hover:underline">
-              <a href={`/jobs/${job.id}`}>{job.title}</a>
+              <Link href={`/${companyName}/${job.id}`}>{job.title}</Link>
             </CardTitle>
             <CardDescription className="flex items-center gap-2 pt-1">
               <Building2 size={14} /> {company.name}

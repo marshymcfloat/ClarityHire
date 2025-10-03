@@ -1,5 +1,4 @@
-// Your page file: app/[companyName]/available-jobs/page.tsx
-import JobCard from "@/components/jobs/JobCard"; // Import the new component
+import JobCard from "@/components/jobs/JobCard";
 import prisma from "@/prisma/prisma";
 import { notFound } from "next/navigation";
 
@@ -34,7 +33,12 @@ const CompanyAvailableJobsPage = async ({
       {company.jobs.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {company.jobs.map((job) => (
-            <JobCard key={job.id} job={job} company={company} />
+            <JobCard
+              key={job.id}
+              job={job}
+              company={company}
+              companyName={companyName}
+            />
           ))}
         </div>
       ) : (

@@ -24,14 +24,15 @@ import {
 } from "@/components/ui/sidebar";
 import UserInfoButton from "./dashboard/UserInfoButton";
 import { Company } from "@prisma/client/edge";
+import { useParams } from "next/navigation";
 
 export function AppSidebar({ company }: { company: Company }) {
   const session = useSession();
-
+  const { companyName } = useParams();
   const items = [
     {
       title: "Available Jobs",
-      url: ``,
+      url: `/${companyName}/available-jobs`,
       icon: Briefcase,
     },
     {
