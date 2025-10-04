@@ -31,7 +31,6 @@ model User {
   company   Company? @relation(fields: [companyId], references: [id])
   companyId String?
 
-  // An applicant has many applications
   applications Application[]
 
   createdAt DateTime @default(now())
@@ -79,6 +78,8 @@ model Company {
   recruiters User[]
   jobs Job[]
 
+  questions Question[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -89,13 +90,13 @@ model Job {
   title            String
   description      String?
 
-  responsibilities String[] // Array of strings for bullet points
-  qualifications   String[] // Array of strings for bullet points
-  benefits         String[] // e.g., ["Dormitory accommodation", "Health Insurance"]
+  responsibilities String[]
+  qualifications   String[]
+  benefits         String[]
 
-  skills           String[]        // e.g., ["Java", "JavaScript", "MySQL", "PHP"]
-  workArrangement  WorkArrangement @default(ON_SITE) // ON_SITE, HYBRID, REMOTE
-  workSchedule     String?         // e.g., "Monday to Saturday, 9am-6pm"
+  skills           String[]
+  workArrangement  WorkArrangement @default(ON_SITE)
+  workSchedule     String?
 
   location         String
   jobType          JobType
@@ -105,8 +106,12 @@ model Job {
   department       String?
   isActive         Boolean         @default(true)
 
+
   company   Company @relation(fields: [companyId], references: [id])
   companyId String
+
+  // A job has a list of questions through the join table
+  questions QuestionOnJob[]
 
   applications Application[]
 
@@ -126,11 +131,70 @@ model Application {
 
   status  ApplicationStatus @default(SUBMITTED)
 
+  // Each application will have its own set of answers
+  answers ApplicationAnswer[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([userId, jobId])
 }
+
+
+
+
+model Question {
+  id String @id @default(cuid())
+
+  question String
+  type     QuestionTypeEnum
+  options  String[] // For MULTIPLE_CHOICE, CHECKBOX, etc.
+
+  // The company that created and owns this question
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId String
+
+  // A question can be used on many jobs through the join table
+  jobs QuestionOnJob[]
+  
+  // A question can be answered in many applications
+  answers ApplicationAnswer[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model QuestionOnJob {
+  jobId      String
+  job        Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  // Extra metadata about the relationship
+  order      Int     @default(0) // To control the display order of questions for a specific job
+  isRequired Boolean @default(true)
+
+  // A question can only appear once per job
+  @@id([jobId, questionId])
+}
+
+model ApplicationAnswer {
+  id     String @id @default(cuid())
+  answer String[]
+
+  // The answer is now linked to a specific Application, not just a user
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  // The question being answered
+  questionId String
+  question   Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  // A question should only be answered once per application
+  @@unique([applicationId, questionId])
+}
+
 
 enum JobType {
   FULL_TIME
@@ -168,4 +232,14 @@ enum WorkArrangement {
   ON_SITE
   HYBRID
   REMOTE
+}
+
+enum QuestionTypeEnum {
+TEXT
+MULTIPLE_CHOICE
+NUMBER
+CHECKBOX
+TRUE_OR_FALSE
+
+
 }

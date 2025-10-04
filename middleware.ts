@@ -11,6 +11,9 @@ export default async function middleware(req: NextRequest) {
   const staticPublicPaths = ["/"];
   const publicJobsPattern = /^\/([^/]+)\/available-jobs$/;
 
+  const protectedPathPattern = /^\/([^/]+)\//;
+  const protectedPathMatch = pathname.match(protectedPathPattern);
+
   if (!token) {
     const isStaticPublic = staticPublicPaths.includes(pathname);
     const isAuthPath = authPaths.includes(pathname);
@@ -45,7 +48,10 @@ export default async function middleware(req: NextRequest) {
 
   if (token) {
     if (authPaths.includes(pathname)) {
-      return NextResponse.redirect(new URL(`/${token.id}/dashboard`, req.url));
+      const companySlug = protectedPathMatch![1];
+      const redirectUrl = new URL(`/${companySlug}/available-jobs`, req.url);
+
+      return NextResponse.redirect(new URL(redirectUrl, req.url));
     }
   }
 

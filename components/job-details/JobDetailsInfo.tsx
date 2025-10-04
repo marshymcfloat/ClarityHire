@@ -1,12 +1,5 @@
 import prisma from "@/prisma/prisma";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../ui/card";
-import JobProgressBar from "./JobProgressBar";
+
 import {
   Bookmark,
   Briefcase,
@@ -18,8 +11,8 @@ import {
 
 import { formattedExperienceLevelMap, formattedJobTypeMap } from "@/constants";
 import { Badge } from "../ui/badge";
-import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
+import ApplyJobButton from "./ApplyJobButton";
 type JobDetailsInfoProps = {
   params: {
     jobId: string;
@@ -105,14 +98,12 @@ const JobDetailsInfo = async ({ params }: JobDetailsInfoProps) => {
                 <Bookmark />
                 Save
               </Button>
-              <Button className="min-w-[120px]">
-                <Send />
-                Apply
-              </Button>
+              <ApplyJobButton
+                jobId={jobDetails.id}
+                jobTitle={jobDetails.title}
+                jobDescription={jobDetails.description}
+              />
             </div>
-          </div>
-          <div className="">
-            <span></span>
           </div>
         </div>
 
