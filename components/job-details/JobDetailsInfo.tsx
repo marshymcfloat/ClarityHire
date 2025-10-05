@@ -12,7 +12,10 @@ import {
 import { formattedExperienceLevelMap, formattedJobTypeMap } from "@/constants";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import ApplyJobButton from "./ApplyJobButton";
+import ApplyJobButton from "./ApplyJobDataContainer";
+import { Suspense } from "react";
+import ApplyJobDataContainer from "./ApplyJobDataContainer";
+import { Skeleton } from "../ui/skeleton";
 type JobDetailsInfoProps = {
   params: {
     jobId: string;
@@ -98,11 +101,13 @@ const JobDetailsInfo = async ({ params }: JobDetailsInfoProps) => {
                 <Bookmark />
                 Save
               </Button>
-              <ApplyJobButton
-                jobId={jobDetails.id}
-                jobTitle={jobDetails.title}
-                jobDescription={jobDetails.description}
-              />
+              <Suspense fallback={<Skeleton className="w-[120px] h-[30px]" />}>
+                <ApplyJobDataContainer
+                  jobId={jobDetails.id}
+                  jobTitle={jobDetails.title}
+                  jobDescription={jobDetails.description}
+                />
+              </Suspense>
             </div>
           </div>
         </div>

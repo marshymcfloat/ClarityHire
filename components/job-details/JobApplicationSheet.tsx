@@ -6,15 +6,20 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Send } from "lucide-react";
 import { Button } from "../ui/button";
+import { Send } from "lucide-react";
+import { Prisma, Question } from "@prisma/client";
+import { ConfiguredQuestion } from "./ApplyJobDataContainer";
 import JobApplicationForm from "./JobApplicationForm";
+
 const JobApplicationSheet = ({
-  jobTitle,
   jobDescription,
+  jobTitle,
+  questions,
 }: {
   jobTitle: string;
-  jobDescription?: string | null;
+  jobDescription: string | null;
+  questions: ConfiguredQuestion[];
 }) => {
   return (
     <Sheet>
@@ -25,10 +30,10 @@ const JobApplicationSheet = ({
       </SheetTrigger>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle className="text-2xl">{jobTitle}</SheetTitle>
+          <SheetTitle>{jobTitle}</SheetTitle>
           <SheetDescription>{jobDescription}</SheetDescription>
         </SheetHeader>
-        <JobApplicationForm />
+        <JobApplicationForm questions={questions} />
       </SheetContent>
     </Sheet>
   );
