@@ -32,6 +32,8 @@ model User {
   companyId String?
 
   applications Application[]
+  resumes Resume[]
+
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -150,7 +152,6 @@ model Question {
   type     QuestionTypeEnum
   options  String[] // For MULTIPLE_CHOICE, CHECKBOX, etc.
 
-  // The company that created and owns this question
   company   Company @relation(fields: [companyId], references: [id])
   companyId String
 
@@ -183,16 +184,28 @@ model ApplicationAnswer {
   id     String @id @default(cuid())
   answer String[]
 
-  // The answer is now linked to a specific Application, not just a user
   applicationId String
   application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
-  // The question being answered
   questionId String
   question   Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
   
-  // A question should only be answered once per application
   @@unique([applicationId, questionId])
+}
+
+
+model Resume {
+  id String @id @default(cuid())
+  name String 
+
+  userId String
+  User User @relation(fields: [userId], references: [id])
+  url String
+
+
+  createdAt DateTime @default(now())
+  deletedAt DateTime?
+
 }
 
 

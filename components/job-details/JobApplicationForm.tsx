@@ -1,164 +1,226 @@
 "use client";
 
-import { Checkbox } from "../ui/checkbox";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
-import { ConfiguredQuestion } from "./ApplyJobDataContainer";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+import { Button } from "../ui/button";
+import { Form } from "../ui/form";
+import {
+  ConfiguredQuestion,
+  ConfiguredResumeType,
+} from "./ApplyJobDataContainer";
+import QuestionRenderer from "./QuestionRenderer";
+import { QuestionTypeEnum } from "@prisma/client";
+
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemFooter,
+  ItemHeader,
+  ItemMedia,
+  ItemTitle,
+} from "@/components/ui/item";
+import { File, PaperclipIcon } from "lucide-react";
+import { Separator } from "../ui/separator";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "../ui/empty";
+import { useRef, useState } from "react";
+
+const createQuestionSchema = (question: ConfiguredQuestion) => {
+  const { type } = question.question;
+  const isRequired = question.isRequired;
+
+  let schema;
+
+  switch (type) {
+    case QuestionTypeEnum.TEXT:
+      schema = z.string();
+      if (isRequired) {
+        schema = schema.min(1, "This field is required.");
+      }
+      break;
+    case QuestionTypeEnum.NUMBER:
+      schema = z.number();
+      if (!isRequired) {
+        schema = schema.optional().or(z.literal(""));
+      }
+      break;
+    case QuestionTypeEnum.CHECKBOX:
+      schema = z.array(z.string());
+      if (isRequired) {
+        schema = schema.min(1, "Please select at least one option.");
+      }
+      break;
+    case QuestionTypeEnum.MULTIPLE_CHOICE:
+    case QuestionTypeEnum.TRUE_OR_FALSE:
+      schema = z.string();
+      if (isRequired) {
+        schema = schema.min(1, "Please select an option.");
+      }
+      break;
+    default:
+      schema = z.any();
+  }
+
+  return z.object({
+    questionId: z.string(),
+    answer: schema,
+  });
+};
 
 const JobApplicationForm = ({
   questions,
+  resumes,
 }: {
   questions: ConfiguredQuestion[];
+  resumes: ConfiguredResumeType[];
 }) => {
-  console.log(questions);
+  const [userResumes, setuserResumes] =
+    useState<(File | ConfiguredResumeType)[]>(resumes);
 
-  function RenderQuestion(question: ConfiguredQuestion, index: number) {
-    switch (question.question.type) {
-      case "TEXT":
-        return (
-          <div className="mb-6" key={index}>
-            <Label
-              htmlFor={`text-${index}`}
-              className="block text-lg font-medium text-gray-800 mb-2 capitalize"
-            >
-              {question.question.question}
-            </Label>
-            <Input
-              type="text"
-              id={`text-${index}`}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
-          </div>
-        );
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-      case "NUMBER":
-        return (
-          <div className="mb-6" key={index}>
-            <Label
-              htmlFor={`number-${index}`}
-              className="block text-lg font-medium text-gray-800 mb-2 capitalize"
-            >
-              {question.question.question}
-            </Label>
-            <Input
-              type="number"
-              id={`number-${index}`}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
-          </div>
-        );
+  const formSchema = z.object({
+    answers: z.array(
+      z.lazy(() => {
+        return z.custom((data: any) => {
+          const question = questions.find(
+            (q) => q.question.id === data.questionId
+          );
+          if (!question) return false;
+          return createQuestionSchema(question).safeParse(data).success;
+        });
+      })
+    ),
+  });
 
-      case "CHECKBOX":
-        return (
-          <div className="mb-6" key={index}>
-            <Label className="block text-lg font-medium text-gray-800 mb-3 capitalize">
-              {question.question.question}
-            </Label>
-            {/* Changed from grid to flex flex-wrap */}
-            <div className="flex flex-wrap gap-3 p-1">
-              {" "}
-              {/* Added gap for spacing between items */}
-              {question.question.options.map((option) => (
-                <div
-                  key={option}
-                  className="flex items-center space-x-2 px-4 py-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors border border-gray-200"
-                >
-                  {" "}
-                  {/* Added full rounded and border */}
-                  <Checkbox
-                    id={`checkbox-${option}-${index}`}
-                    className="h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                  />
-                  <Label
-                    htmlFor={`checkbox-${option}-${index}`}
-                    className="text-base text-gray-700 cursor-pointer select-none"
-                  >
-                    {option}
-                  </Label>{" "}
-                  {/* Added select-none */}
-                </div>
-              ))}
-            </div>
-          </div>
-        );
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      answers: questions.map((q) => ({
+        questionId: q.question.id,
+        answer: q.question.type === "CHECKBOX" ? [] : "",
+      })),
+    },
+  });
 
-      case "MULTIPLE_CHOICE":
-        return (
-          <div className="mb-6" key={index}>
-            <Label className="block text-lg font-medium text-gray-800 mb-3">
-              {question.question.question}
-            </Label>
-            <RadioGroup className="flex flex-wrap gap-3 p-1">
-              {" "}
-              {question.question.options.map((option, optionIndex) => (
-                <div
-                  key={option}
-                  className="flex items-center space-x-2 px-4 py-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors border border-gray-200"
-                >
-                  {" "}
-                  <RadioGroupItem
-                    value={option}
-                    id={`radio-${option}-${index}`}
-                    className="h-5 w-5 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                  />
-                  <Label
-                    htmlFor={`radio-${option}-${index}`}
-                    className="text-base text-gray-700 cursor-pointer select-none"
-                  >
-                    {option}
-                  </Label>{" "}
-                  {/* Added select-none */}
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
-        );
-
-      case "TRUE_OR_FALSE":
-        return (
-          <div className="mb-6" key={index}>
-            <Label className="block text-lg font-medium text-gray-800 mb-3">
-              {question.question.question}
-            </Label>
-            <RadioGroup className="flex flex-wrap gap-3 p-1">
-              {" "}
-              {/* Adjusted spacing and added flex-wrap */}
-              <div className="flex items-center space-x-2 px-4 py-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors border border-gray-200">
-                <RadioGroupItem
-                  value="true"
-                  id={`true-${index}`}
-                  className="h-5 w-5 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                />
-                <Label
-                  htmlFor={`true-${index}`}
-                  className="text-base text-gray-700 cursor-pointer select-none"
-                >
-                  True
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2 px-4 py-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors border border-gray-200">
-                <RadioGroupItem
-                  value="false"
-                  id={`false-${index}`}
-                  className="h-5 w-5 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                />
-                <Label
-                  htmlFor={`false-${index}`}
-                  className="text-base text-gray-700 cursor-pointer select-none"
-                >
-                  False
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-        );
-    }
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log("Form Submitted Successfully:", values);
   }
+
+  const dateNow = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  });
+
   return (
-    <div className="flex flex-col gap-4 p-4">
-      {questions.map((question, index) => RenderQuestion(question, index))}
-    </div>
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-8 p-4 overflow-y-auto"
+      >
+        <div className="w-full max-w-sm space-y-4 rounded-xl border bg-card p-4 text-card-foreground">
+          {userResumes.map((resume, index) => {
+            // Check if the item is a ConfiguredResumeType from the DB
+            const isFromDb = "createdAt" in resume;
+
+            return (
+              <Item
+                variant={"outline"}
+                className="bg-secondary"
+                // Use a more robust key. The 'id' exists on DB resumes.
+                // For new files, we can use the name and size for uniqueness.
+                key={isFromDb ? resume.id : `${resume.name}-${resume.size}`}
+              >
+                <ItemContent>
+                  {/* The 'name' property exists on both types */}
+                  <ItemTitle>{resume.name}</ItemTitle>
+                  <ItemDescription className="text-xs">
+                    {isFromDb ? (
+                      <>
+                        Uploaded At:{" "}
+                        <span className="font-medium text-foreground">
+                          {new Date(resume.createdAt).toLocaleDateString()}
+                        </span>
+                      </>
+                    ) : (
+                      // Display different info for a newly added file
+                      <span className="font-medium text-blue-500">
+                        New file (not uploaded)
+                      </span>
+                    )}
+                  </ItemDescription>
+                </ItemContent>
+                <ItemActions>
+                  <Button variant="outline" size="sm" className="">
+                    Select
+                  </Button>
+                </ItemActions>
+              </Item>
+            );
+          })}
+
+          <Empty
+            className="hover:bg-muted duration-150 transition-all cursor-pointer"
+            onClick={() => {
+              if (fileInputRef && fileInputRef.current) {
+                fileInputRef.current.click();
+              }
+            }}
+          >
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <PaperclipIcon className="size-5" />
+              </EmptyMedia>
+              <EmptyTitle>Add New Resume</EmptyTitle>
+              <EmptyDescription>
+                Click to browse or drag and drop your file.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+
+          <input
+            type="file"
+            onChange={(e) => {
+              if (e.target.files && e.target.files.length > 0) {
+                const newFile = e.target.files[0];
+
+                const newResumeEntry: ConfiguredResumeType = {
+                  id: crypto.randomUUID(), // Use a proper unique ID for the key
+                  name: newFile.name,
+                  createdAt: new Date(), // Use the current date
+                  url: URL.createObjectURL(newFile), // Create a temporary local URL for preview
+                };
+
+                setuserResumes((prev) => [...prev, newResumeEntry]);
+              }
+            }}
+            className="hidden"
+            ref={fileInputRef}
+          />
+        </div>
+        {questions.map((question, index) => (
+          <QuestionRenderer
+            key={question.question.id}
+            control={form.control}
+            question={question}
+            index={index}
+          />
+        ))}
+        <Button type="submit" className="w-full ">
+          Submit Application
+        </Button>
+      </form>
+    </Form>
   );
 };
 

@@ -8,18 +8,23 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "../ui/button";
 import { Send } from "lucide-react";
-import { Prisma, Question } from "@prisma/client";
-import { ConfiguredQuestion } from "./ApplyJobDataContainer";
+import { Prisma, Question, Resume } from "@prisma/client";
+import {
+  ConfiguredQuestion,
+  ConfiguredResumeType,
+} from "./ApplyJobDataContainer";
 import JobApplicationForm from "./JobApplicationForm";
 
 const JobApplicationSheet = ({
   jobDescription,
   jobTitle,
   questions,
+  resumes,
 }: {
   jobTitle: string;
   jobDescription: string | null;
   questions: ConfiguredQuestion[];
+  resumes: ConfiguredResumeType[];
 }) => {
   return (
     <Sheet>
@@ -33,7 +38,7 @@ const JobApplicationSheet = ({
           <SheetTitle>{jobTitle}</SheetTitle>
           <SheetDescription>{jobDescription}</SheetDescription>
         </SheetHeader>
-        <JobApplicationForm questions={questions} />
+        <JobApplicationForm questions={questions} resumes={resumes} />
       </SheetContent>
     </Sheet>
   );
