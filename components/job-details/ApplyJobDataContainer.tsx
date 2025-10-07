@@ -6,7 +6,7 @@ import { authOptions } from "@/lib/auth";
 
 export type ConfiguredQuestion = {
   question: {
-    id: string; // <-- Add question ID
+    id: string;
     question: string;
     type: QuestionTypeEnum;
     options: string[];
@@ -41,10 +41,10 @@ const ApplyJobDataContainer = async ({
       jobId,
     },
     select: {
-      isRequired: true, // <-- Select isRequired
+      isRequired: true,
       question: {
         select: {
-          id: true, // <-- Select question ID
+          id: true,
           question: true,
           options: true,
           type: true,
@@ -52,7 +52,7 @@ const ApplyJobDataContainer = async ({
       },
     },
     orderBy: {
-      order: "asc", // Good practice to order the questions
+      order: "asc",
     },
   });
 

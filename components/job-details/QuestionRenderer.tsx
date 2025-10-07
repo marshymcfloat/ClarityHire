@@ -1,4 +1,3 @@
-// components/QuestionRenderer.tsx (New File)
 "use client";
 
 import { Control } from "react-hook-form";
@@ -13,9 +12,10 @@ import {
 import { Input } from "../ui/input";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Checkbox } from "../ui/checkbox";
+import { QuestionTypeEnum } from "@prisma/client";
 
 type QuestionRendererProps = {
-  control: Control<any>; // Pass the control object from RHF
+  control: Control<any>;
   question: ConfiguredQuestion;
   index: number;
 };
@@ -26,13 +26,16 @@ const QuestionRenderer = ({
   index,
 }: QuestionRendererProps) => {
   const questionData = question.question;
-
-  // This is the "name" of our field in the RHF state.
-  // It corresponds to `answers[index].answer`
   const fieldName = `answers.${index}.answer` as const;
+  const isRequired = question.isRequired;
+
+  const renderRequiredIndicator = () => {
+    if (!isRequired) return null;
+    return <span className="text-destructive ml-1">*</span>;
+  };
 
   switch (questionData.type) {
-    case "TEXT":
+    case QuestionTypeEnum.TEXT:
       return (
         <FormField
           control={control}
@@ -41,32 +44,13 @@ const QuestionRenderer = ({
             <FormItem>
               <FormLabel className="text-lg capitalize">
                 {questionData.question}
-              </FormLabel>
-              <FormControl>
-                <Input placeholder="Your answer" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      );
-
-    case "NUMBER":
-      return (
-        <FormField
-          control={control}
-          name={fieldName}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-lg capitalize">
-                {questionData.question}
+                {renderRequiredIndicator()}
               </FormLabel>
               <FormControl>
                 <Input
-                  type="number"
                   placeholder="Your answer"
                   {...field}
-                  onChange={(event) => field.onChange(+event.target.value)}
+                  value={field.value || ""}
                 />
               </FormControl>
               <FormMessage />
@@ -75,8 +59,41 @@ const QuestionRenderer = ({
         />
       );
 
-    case "TRUE_OR_FALSE":
-    case "MULTIPLE_CHOICE":
+    case QuestionTypeEnum.NUMBER:
+      return (
+        <FormField
+          control={control}
+          name={fieldName}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-lg capitalize">
+                {questionData.question}
+                {renderRequiredIndicator()}
+              </FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="Your answer"
+                  {...field}
+                  value={field.value || ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "") {
+                      field.onChange(undefined);
+                    } else {
+                      field.onChange(value);
+                    }
+                  }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      );
+
+    case QuestionTypeEnum.TRUE_OR_FALSE:
+    case QuestionTypeEnum.MULTIPLE_CHOICE:
       return (
         <FormField
           control={control}
@@ -85,11 +102,12 @@ const QuestionRenderer = ({
             <FormItem className="space-y-3">
               <FormLabel className="text-lg capitalize">
                 {questionData.question}
+                {renderRequiredIndicator()}
               </FormLabel>
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  value={field.value || ""}
                   className="flex flex-col space-y-1"
                 >
                   {(questionData.type === "TRUE_OR_FALSE"
@@ -114,16 +132,17 @@ const QuestionRenderer = ({
         />
       );
 
-    case "CHECKBOX":
+    case QuestionTypeEnum.CHECKBOX:
       return (
         <FormField
           control={control}
           name={fieldName}
-          render={() => (
+          render={({ field }) => (
             <FormItem>
               <div className="mb-4">
                 <FormLabel className="text-lg capitalize">
                   {questionData.question}
+                  {renderRequiredIndicator()}
                 </FormLabel>
               </div>
               <div className="flex flex-wrap gap-4">
@@ -132,27 +151,33 @@ const QuestionRenderer = ({
                     <FormField
                       control={control}
                       name={fieldName}
-                      render={({ field }) => {
+                      render={({ field: checkboxField }) => {
+                        const fieldValue = Array.isArray(checkboxField.value)
+                          ? checkboxField.value
+                          : [];
                         return (
                           <FormItem
                             key={option}
-                            className="flex flex-row items-start  space-y-0"
+                            className="flex flex-row items-start space-y-0 gap-x-2"
                           >
                             <FormControl>
                               <Checkbox
-                                checked={field.value?.includes(option)}
+                                checked={fieldValue.includes(option)}
                                 onCheckedChange={(checked) => {
                                   return checked
-                                    ? field.onChange([...field.value, option])
-                                    : field.onChange(
-                                        field.value?.filter(
+                                    ? checkboxField.onChange([
+                                        ...fieldValue,
+                                        option,
+                                      ])
+                                    : checkboxField.onChange(
+                                        fieldValue.filter(
                                           (value: string) => value !== option
                                         )
                                       );
                                 }}
                               />
                             </FormControl>
-                            <FormLabel className="font-normal">
+                            <FormLabel className="font-normal cursor-pointer">
                               {option}
                             </FormLabel>
                           </FormItem>

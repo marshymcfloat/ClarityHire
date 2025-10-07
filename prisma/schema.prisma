@@ -1,8 +1,8 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// learn more about it in the docs: https:
+
+
+// Try Prisma Accelerate: https:
 
 generator client {
   provider = "prisma-client-js"
@@ -13,7 +13,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ... User and Account models are fine ...
+
 
 model User {
   id    String @id @default(cuid())
@@ -27,7 +27,7 @@ model User {
 
   role UserRoleEnum[] @default([APPLICANT])
 
-  // A recruiter belongs to one company
+  
   company   Company? @relation(fields: [companyId], references: [id])
   companyId String?
 
@@ -67,7 +67,7 @@ model Company {
   id String @id @default(cuid())
 
   name String 
-  // Make slug unique to prevent conflicts
+  
   slug String @unique
 
   image String?
@@ -112,7 +112,7 @@ model Job {
   company   Company @relation(fields: [companyId], references: [id])
   companyId String
 
-  // A job has a list of questions through the join table
+  
   questions QuestionOnJob[]
 
   applications Application[]
@@ -133,7 +133,7 @@ model Application {
 
   status  ApplicationStatus @default(SUBMITTED)
 
-  // Each application will have its own set of answers
+  
   answers ApplicationAnswer[]
 
   createdAt DateTime @default(now())
@@ -150,15 +150,15 @@ model Question {
 
   question String
   type     QuestionTypeEnum
-  options  String[] // For MULTIPLE_CHOICE, CHECKBOX, etc.
+  options  String[] 
 
   company   Company @relation(fields: [companyId], references: [id])
   companyId String
 
-  // A question can be used on many jobs through the join table
+  
   jobs QuestionOnJob[]
   
-  // A question can be answered in many applications
+  
   answers ApplicationAnswer[]
 
   createdAt DateTime @default(now())
@@ -172,11 +172,11 @@ model QuestionOnJob {
   questionId String
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
-  // Extra metadata about the relationship
-  order      Int     @default(0) // To control the display order of questions for a specific job
+  
+  order      Int     @default(0) 
   isRequired Boolean @default(true)
 
-  // A question can only appear once per job
+  
   @@id([jobId, questionId])
 }
 
