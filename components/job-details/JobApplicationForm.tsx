@@ -23,6 +23,7 @@ import { CheckCircle, PaperclipIcon } from "lucide-react";
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "../ui/empty";
 import { useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { submitApplication } from "@/lib/actions/applicationActions";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_RESUME_TYPES = [
@@ -61,7 +62,7 @@ const resumeUnionSchema = z.discriminatedUnion("type", [
   existingResumeSchema,
 ]);
 
-const createQuestionSchema = (question: ConfiguredQuestion) => {
+export const createQuestionSchema = (question: ConfiguredQuestion) => {
   const { type } = question.question;
   const isRequired = question.isRequired;
   let schema;
@@ -96,77 +97,70 @@ const createQuestionSchema = (question: ConfiguredQuestion) => {
       else schema = schema.optional().or(z.literal(""));
       break;
     default:
-      schema = z.any();
+      // Using z.unknown() is slightly better than z.any() for type safety
+      schema = z.unknown();
   }
   return schema;
 };
 
-const JobApplicationForm = ({
-  questions,
-  resumes,
-}: {
-  questions: ConfiguredQuestion[];
-  resumes: ConfiguredResumeType[];
-}) => {
-  const formSchema = useMemo(() => {
-    const answersSchema = z.object({
+// Create a reusable function to build the schema
+const createFormSchema = (questions: ConfiguredQuestion[]) =>
+  z
+    .object({
+      resume: resumeUnionSchema, // No need for .refine, Zod handles undefined check by default on non-optional fields
       answers: z.array(
         z.object({
           questionId: z.string(),
-          answer: z.any(),
+          // Use z.unknown() as a placeholder before superRefine
+          answer: z.unknown(),
         })
       ),
-    });
+    })
+    .superRefine((data, ctx) => {
+      data.answers.forEach((answer, index) => {
+        const question = questions[index];
+        if (!question) return;
 
-    return z
-      .object({
-        resume: resumeUnionSchema.refine((val) => val !== undefined, {
-          message: "Please select or upload a resume.",
-        }),
-        answers: z.array(
-          z.object({
-            questionId: z.string(),
-            answer: z.any(),
-          })
-        ),
-      })
-      .superRefine((data, ctx) => {
-        if (!data.resume) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "Please select or upload a resume.",
-            path: ["resume"],
+        const questionSchema = createQuestionSchema(question);
+        const result = questionSchema.safeParse(answer.answer);
+
+        if (!result.success) {
+          result.error.issues.forEach((issue) => {
+            ctx.addIssue({
+              ...issue,
+              path: ["answers", index, "answer"],
+            });
           });
         }
-
-        data.answers.forEach((answer, index) => {
-          const question = questions[index];
-          if (!question) return;
-
-          const questionSchema = createQuestionSchema(question);
-          const result = questionSchema.safeParse(answer.answer);
-
-          if (!result.success) {
-            result.error.issues.forEach((issue) => {
-              ctx.addIssue({
-                ...issue,
-                path: ["answers", index, "answer"],
-              });
-            });
-          }
-        });
       });
-  }, [questions]);
+    });
+
+// 1. Define and export the form's type directly from the schema
+export type ApplicationFormSchemaType = z.infer<
+  ReturnType<typeof createFormSchema>
+>;
+
+const JobApplicationForm = ({
+  jobId,
+  questions,
+  resumes,
+}: {
+  jobId: string;
+  questions: ConfiguredQuestion[];
+  resumes: ConfiguredResumeType[];
+}) => {
+  const formSchema = useMemo(() => createFormSchema(questions), [questions]);
 
   const [availableResumes, setAvailableResumes] =
     useState<(File | ConfiguredResumeType)[]>(resumes);
   const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  // 2. Use the exported type with useForm for full type safety
+  const form = useForm<ApplicationFormSchemaType>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      resume: undefined,
+      // resume: undefined, // Let zodResolver handle the initial undefined state
       answers: questions.map((q) => ({
         questionId: q.question.id,
         answer: q.question.type === "CHECKBOX" ? [] : "",
@@ -175,10 +169,14 @@ const JobApplicationForm = ({
     mode: "onBlur",
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  // 3. Use the exported type in the onSubmit handler
+  async function onSubmit(values: ApplicationFormSchemaType) {
     console.log("Form Submitted Successfully. Raw values:", values);
     const formData = new FormData();
+    formData.append("jobId", jobId);
     formData.append("answers", JSON.stringify(values.answers));
+
+    // The union is discriminated, so this check is type-safe
     if (values.resume.type === "new") {
       formData.append("resumeType", "new");
       formData.append("resumeFile", values.resume.file);
@@ -186,7 +184,8 @@ const JobApplicationForm = ({
       formData.append("resumeType", "old");
       formData.append("resumeId", values.resume.details.id);
     }
-    alert("Check the console to see the prepared FormData object!");
+
+    await submitApplication(formData);
   }
 
   const handleSelectResume = (resume: File | ConfiguredResumeType) => {
@@ -216,6 +215,7 @@ const JobApplicationForm = ({
         handleSelectResume(newFile);
       } catch (error) {
         if (error instanceof z.ZodError) {
+          // You might want a more user-friendly error display, like a toast
           alert(error.issues[0].message);
         }
       }
@@ -323,6 +323,7 @@ const JobApplicationForm = ({
               key={question.question.id}
               className="space-y-4 p-4 border rounded-lg bg-card"
             >
+              {/* This prop is now correctly typed */}
               <QuestionRenderer
                 control={form.control}
                 question={question}

@@ -12,7 +12,6 @@ import {
 import { formattedExperienceLevelMap, formattedJobTypeMap } from "@/constants";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import ApplyJobButton from "./ApplyJobDataContainer";
 import { Suspense } from "react";
 import ApplyJobDataContainer from "./ApplyJobDataContainer";
 import { Skeleton } from "../ui/skeleton";

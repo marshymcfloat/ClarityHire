@@ -13,9 +13,12 @@ import { Input } from "../ui/input";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Checkbox } from "../ui/checkbox";
 import { QuestionTypeEnum } from "@prisma/client";
+// 1. Import the type from the parent form component
+import type { ApplicationFormSchemaType } from "./JobApplicationForm"; // Adjust path if necessary
 
 type QuestionRendererProps = {
-  control: Control<any>;
+  // 2. Use the imported type for the Control prop
+  control: Control<ApplicationFormSchemaType>;
   question: ConfiguredQuestion;
   index: number;
 };
@@ -50,7 +53,7 @@ const QuestionRenderer = ({
                 <Input
                   placeholder="Your answer"
                   {...field}
-                  value={field.value || ""}
+                  value={(field.value as string | number) ?? ""}
                 />
               </FormControl>
               <FormMessage />
@@ -75,9 +78,10 @@ const QuestionRenderer = ({
                   type="number"
                   placeholder="Your answer"
                   {...field}
-                  value={field.value || ""}
+                  value={(field.value as string | number) ?? ""}
                   onChange={(e) => {
                     const value = e.target.value;
+                    // The parent component's Zod schema preprocesses this string.
                     if (value === "") {
                       field.onChange(undefined);
                     } else {
@@ -107,7 +111,9 @@ const QuestionRenderer = ({
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
-                  value={field.value || ""}
+                  // 3. FIX: Convert the value to a string for the component's prop.
+                  // This doesn't change the actual form state value.
+                  value={String(field.value ?? "")}
                   className="flex flex-col space-y-1"
                 >
                   {(questionData.type === "TRUE_OR_FALSE"
@@ -147,19 +153,22 @@ const QuestionRenderer = ({
               </div>
               <div className="flex flex-wrap gap-4">
                 {questionData.options.map((option) => (
-                  <div className="px-4 py-2 bg-muted rounded-full" key={option}>
-                    <FormField
-                      control={control}
-                      name={fieldName}
-                      render={({ field: checkboxField }) => {
-                        const fieldValue = Array.isArray(checkboxField.value)
-                          ? checkboxField.value
-                          : [];
-                        return (
-                          <FormItem
-                            key={option}
-                            className="flex flex-row items-start space-y-0 gap-x-2"
-                          >
+                  <FormField
+                    key={option}
+                    control={control}
+                    name={fieldName}
+                    render={({ field: checkboxField }) => {
+                      // With the shared type, `checkboxField.value` is correctly typed as `unknown`.
+                      // We must safely check if it's an array.
+                      const fieldValue = Array.isArray(checkboxField.value)
+                        ? checkboxField.value
+                        : [];
+                      return (
+                        <div
+                          className="px-4 py-2 bg-muted rounded-full"
+                          key={option}
+                        >
+                          <FormItem className="flex flex-row items-start space-y-0 gap-x-2">
                             <FormControl>
                               <Checkbox
                                 checked={fieldValue.includes(option)}
@@ -171,7 +180,7 @@ const QuestionRenderer = ({
                                       ])
                                     : checkboxField.onChange(
                                         fieldValue.filter(
-                                          (value: string) => value !== option
+                                          (value) => value !== option
                                         )
                                       );
                                 }}
@@ -181,10 +190,10 @@ const QuestionRenderer = ({
                               {option}
                             </FormLabel>
                           </FormItem>
-                        );
-                      }}
-                    />
-                  </div>
+                        </div>
+                      );
+                    }}
+                  />
                 ))}
               </div>
               <FormMessage />

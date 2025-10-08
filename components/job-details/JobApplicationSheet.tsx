@@ -20,7 +20,9 @@ const JobApplicationSheet = ({
   jobTitle,
   questions,
   resumes,
+  jobId,
 }: {
+  jobId: string;
   jobTitle: string;
   jobDescription: string | null;
   questions: ConfiguredQuestion[];
@@ -38,7 +40,11 @@ const JobApplicationSheet = ({
           <SheetTitle>{jobTitle}</SheetTitle>
           <SheetDescription>{jobDescription}</SheetDescription>
         </SheetHeader>
-        <JobApplicationForm questions={questions} resumes={resumes} />
+        <JobApplicationForm
+          questions={questions}
+          resumes={resumes}
+          jobId={jobId}
+        />
       </SheetContent>
     </Sheet>
   );

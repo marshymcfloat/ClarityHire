@@ -75,6 +75,7 @@ const ApplyJobDataContainer = async ({
         jobTitle={jobTitle}
         questions={questionsForThisJob}
         resumes={resumes}
+        jobId={jobId}
       />
     </>
   );
